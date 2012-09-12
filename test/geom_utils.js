@@ -210,6 +210,8 @@ describe('fips_lookup',function(){
     it('should give a fips list'
       ,function(done){
            var f_l = geom_utils.fips_lookup()
+           var fips_codes = _.keys(f_l)
+           fips_codes.should.have.length(58)
            _.each(f_l
                  ,function(v,k){
                       should.exist(v)
