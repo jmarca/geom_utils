@@ -251,6 +251,28 @@ describe('replace_fips',function(){
            done()
        })
 })
+
+describe('replace_city_abbrev',function(){
+    var cities = require('../lib/cities.js').cities
+    it('should replace a city abbreviation code with a city name'
+      ,function(done){
+           _.each(cities
+                 ,function(v,k){
+                      should.exist(v)
+                      geom_utils.replace_city_abbrev(k).should.equal(v.name)
+                  });
+           done()
+       })
+    it('should replace a city abbreviation code with a fips code'
+      ,function(done){
+           _.each(cities
+                 ,function(v,k){
+                      should.exist(v)
+                      geom_utils.replace_city_abbrev(k,true).should.equal(v.fips)
+                  });
+           done()
+       })
+})
 describe('time_formatter',function(){
     it('should format a date the way I need it for sql queries'
       ,function(done){
