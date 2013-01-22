@@ -42,8 +42,8 @@ describe('get_bbox',function(){
                     })
             app.get('/withformat_presetbbox'
                    ,function(req,res,next){
-                        req.params['bbox']='prix fixe bbox'
-                        var bbox = geom_utils.get_bbox_with_format(req)
+                        req.params['bbox']='mybbox as (select \'prix fixe bbox\' as geom)'
+                        var bbox = geom_utils.get_bbox_with_format(req,'mybbox')
                         return res.send(bbox)
                     })
             app.get('/withformatbbox/:zoom/:column/:row'
@@ -88,7 +88,7 @@ describe('get_bbox',function(){
                //console.log(res)
                res.should.have.property('text')
                var c = res.text
-
+               //console.log(c)
                c.should.match(/-118.1250 33.7243,-118.1250 34.0162,-117.7734 34.0162,-117.7734 33.7243,-118.1250 33.7243/)
                c.should.match(/bounding_area as/)
                return done()
