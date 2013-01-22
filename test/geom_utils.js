@@ -40,6 +40,17 @@ describe('get_bbox',function(){
                         var bbox = geom_utils.get_bbox(req)
                         return res.send(bbox)
                     })
+            app.get('/withformat_presetbbox'
+                   ,function(req,res,next){
+                        req.params['bbox']='mybbox as (select \'prix fixe bbox\' as geom)'
+                        var bbox = geom_utils.get_bbox_with_format(req,'mybbox')
+                        return res.send(bbox)
+                    })
+            app.get('/withformatbbox/:zoom/:column/:row'
+                   ,function(req,res,next){
+                        var bbox = geom_utils.get_bbox_with_format(req)
+                        return res.send(bbox)
+                    })
             server=http
                    .createServer(app)
                    .listen(testport,done)
@@ -67,6 +78,22 @@ describe('get_bbox',function(){
            })
        })
 
+    it('should generate a bbox from zoom,column,row using "with" format'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+['/withformatbbox',zoom,column,row].join('/'))
+           //.set('accept','application/json')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.ok.should.be.true
+               //console.log(res)
+               res.should.have.property('text')
+               var c = res.text
+               //console.log(c)
+               c.should.match(/-118.1250 33.7243,-118.1250 34.0162,-117.7734 34.0162,-117.7734 33.7243,-118.1250 33.7243/)
+               c.should.match(/bounding_area as/)
+               return done()
+           })
+       })
     it('should generate a bbox from a bbox'
       ,function(done){
            var bbox = '-118.1250 33.7243,-117.7734 35.0162'
@@ -93,6 +120,21 @@ describe('get_bbox',function(){
                res.should.have.property('text')
                var c = res.text
                c.should.match(bbox)
+               return done()
+           })
+       })
+    it('should not mess with a bbox value set by handler when using with formatting'
+      ,function(done){
+           var bbox = /prix fixe bbox/
+           superagent.get('http://'+testhost+':'+testport+'/withformat_presetbbox')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.ok.should.be.true
+               //console.log(res)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.match(bbox)
+               c.should.not.match(/bounding_area as/)
                return done()
            })
        })
