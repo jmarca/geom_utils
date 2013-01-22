@@ -34,6 +34,12 @@ describe('get_bbox',function(){
                         var bbox = geom_utils.get_bbox(req)
                         return res.send(bbox)
                     })
+            app.get('/setbbox'
+                   ,function(req,res,next){
+                        req.params['bbox']='prix fixe bbox'
+                        var bbox = geom_utils.get_bbox(req)
+                        return res.send(bbox)
+                    })
             server=http
                    .createServer(app)
                    .listen(testport,done)
@@ -73,6 +79,20 @@ describe('get_bbox',function(){
                res.should.have.property('text')
                var c = res.text
                c.should.match(/-118.1250 33.7243,-118.1250 35.0162,-117.7734 35.0162,-117.7734 33.7243,-118.1250 33.7243/)
+               return done()
+           })
+       })
+    it('should recognize a bbox value set by handler'
+      ,function(done){
+           var bbox = /prix fixe bbox/
+           superagent.get('http://'+testhost+':'+testport+'/setbbox')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.ok.should.be.true
+               //console.log(res)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.match(bbox)
                return done()
            })
        })
