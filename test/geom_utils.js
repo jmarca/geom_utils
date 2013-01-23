@@ -134,7 +134,7 @@ describe('get_bbox',function(){
                res.should.have.property('text')
                var c = res.text
                c.should.match(bbox)
-               c.should.not.match(/bounding_area as/)
+               c.should.not.match(/\s+as\s*\(.*\s+as\s*\(/)
                return done()
            })
        })
