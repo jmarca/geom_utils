@@ -34,6 +34,23 @@ describe('get_bbox',function(){
                         var bbox = geom_utils.get_bbox(req)
                         return res.send(bbox)
                     })
+            app.get('/setbbox'
+                   ,function(req,res,next){
+                        req.params['bbox']='prix fixe bbox'
+                        var bbox = geom_utils.get_bbox(req)
+                        return res.send(bbox)
+                    })
+            app.get('/withformat_presetbbox'
+                   ,function(req,res,next){
+                        req.params['bbox']='mybbox as (select \'prix fixe bbox\' as geom)'
+                        var bbox = geom_utils.get_bbox_with_format(req,'mybbox')
+                        return res.send(bbox)
+                    })
+            app.get('/withformatbbox/:zoom/:column/:row'
+                   ,function(req,res,next){
+                        var bbox = geom_utils.get_bbox_with_format(req)
+                        return res.send(bbox)
+                    })
             server=http
                    .createServer(app)
                    .listen(testport,done)
@@ -61,6 +78,22 @@ describe('get_bbox',function(){
            })
        })
 
+    it('should generate a bbox from zoom,column,row using "with" format'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+['/withformatbbox',zoom,column,row].join('/'))
+           //.set('accept','application/json')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.ok.should.be.true
+               //console.log(res)
+               res.should.have.property('text')
+               var c = res.text
+               //console.log(c)
+               c.should.match(/-118.1250 33.7243,-118.1250 34.0162,-117.7734 34.0162,-117.7734 33.7243,-118.1250 33.7243/)
+               c.should.match(/bounding_area as/)
+               return done()
+           })
+       })
     it('should generate a bbox from a bbox'
       ,function(done){
            var bbox = '-118.1250 33.7243,-117.7734 35.0162'
@@ -73,6 +106,35 @@ describe('get_bbox',function(){
                res.should.have.property('text')
                var c = res.text
                c.should.match(/-118.1250 33.7243,-118.1250 35.0162,-117.7734 35.0162,-117.7734 33.7243,-118.1250 33.7243/)
+               return done()
+           })
+       })
+    it('should recognize a bbox value set by handler'
+      ,function(done){
+           var bbox = /prix fixe bbox/
+           superagent.get('http://'+testhost+':'+testport+'/setbbox')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.ok.should.be.true
+               //console.log(res)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.match(bbox)
+               return done()
+           })
+       })
+    it('should not mess with a bbox value set by handler when using with formatting'
+      ,function(done){
+           var bbox = /prix fixe bbox/
+           superagent.get('http://'+testhost+':'+testport+'/withformat_presetbbox')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.ok.should.be.true
+               //console.log(res)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.match(bbox)
+               c.should.not.match(/\s+as\s*\(.*\s+as\s*\(/)
                return done()
            })
        })
@@ -210,6 +272,8 @@ describe('fips_lookup',function(){
     it('should give a fips list'
       ,function(done){
            var f_l = geom_utils.fips_lookup()
+           var fips_codes = _.keys(f_l)
+           fips_codes.should.have.length(58)
            _.each(f_l
                  ,function(v,k){
                       should.exist(v)
@@ -245,6 +309,28 @@ describe('replace_fips',function(){
                       should.exist(v)
                       k.should.match(/^06\d\d\d/)
                       geom_utils.replace_fips(k).should.equal(v)
+                  });
+           done()
+       })
+})
+
+describe('replace_city_abbrev',function(){
+    var cities = require('../lib/cities.js').cities
+    it('should replace a city abbreviation code with a city name'
+      ,function(done){
+           _.each(cities
+                 ,function(v,k){
+                      should.exist(v)
+                      geom_utils.replace_city_abbrev(k).should.equal(v.name)
+                  });
+           done()
+       })
+    it('should replace a city abbreviation code with a fips code'
+      ,function(done){
+           _.each(cities
+                 ,function(v,k){
+                      should.exist(v)
+                      geom_utils.replace_city_abbrev(k,true).should.equal(v.fips)
                   });
            done()
        })
