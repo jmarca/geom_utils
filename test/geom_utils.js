@@ -34,6 +34,11 @@ describe('get_bbox',function(){
                         var bbox = geom_utils.get_bbox(req)
                         return res.send(bbox)
                     })
+            app.get('/bbox/:areatype/:area'
+                   ,function(req,res,next){
+                        var bbox = geom_utils.get_bbox(req,'areatype','area')
+                        return res.send(bbox)
+                    })
             app.get('/setbbox'
                    ,function(req,res,next){
                         req.params['bbox']='prix fixe bbox'
@@ -49,6 +54,21 @@ describe('get_bbox',function(){
             app.get('/withformatbbox/:zoom/:column/:row'
                    ,function(req,res,next){
                         var bbox = geom_utils.get_bbox_with_format(req)
+                        return res.send(bbox)
+                    })
+            app.get('/withformatbbox/:areatype/:area'
+                   ,function(req,res,next){
+                        var bbox = geom_utils.get_bbox_with_format(req,{'area_type_param':'areatype'
+                                                                       ,'area_param':'area'
+                                                                       })
+                        return res.send(bbox)
+                    })
+            app.get('/withbananaformatbbox/:areatype/:area'
+                   ,function(req,res,next){
+                        var bbox = geom_utils.get_bbox_with_format(req,{'area_type_param':'areatype'
+                                                                       ,'area_param':'area'
+                                                                       ,'alias':'banana'
+                                                                       })
                         return res.send(bbox)
                     })
             server=http
@@ -138,6 +158,43 @@ describe('get_bbox',function(){
                return done()
            })
        })
+    it('should generate a bbox from a county'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+'/bbox/counties/06001')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.status.should.eql(200)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.eql("(select geom4326 as geom from public.carb_counties_aligned_03  join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips='06001' ) as area")
+               return done()
+           })
+       })
+    it('should generate a bbox from a county, with clause'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+'/withformatbbox/counties/06001')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.status.should.eql(200)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.eql("bounding_area as ( select (select geom4326 as geom from public.carb_counties_aligned_03  join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
+               return done()
+           })
+       })
+    it('should generate a bbox from a county'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+'/withbananaformatbbox/counties/06001')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.status.should.eql(200)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.eql("banana as ( select (select geom4326 as geom from public.carb_counties_aligned_03  join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
+               return done()
+           })
+       })
+
 })
 
 describe('bbox_from_xyz',function(){
