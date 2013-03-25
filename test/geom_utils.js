@@ -166,7 +166,31 @@ describe('get_bbox',function(){
                res.status.should.eql(200)
                res.should.have.property('text')
                var c = res.text
-               c.should.eql("(select geom4326 as geom from public.carb_counties_aligned_03  join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips='06001' ) as area")
+               c.should.eql("(select geom4326 as geom from public.carb_counties_aligned_03 join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips='06001' ) as area")
+               return done()
+           })
+       })
+    it('should generate a bbox from a airdistrict'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+'/bbox/airdistricts/06001')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.status.should.eql(200)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.eql("(select geom4326 as geom from public.carb_airdistricts_aligned_03 where dis='06001' ) as area")
+               return done()
+           })
+       })
+    it('should generate a bbox from a airbasin'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+'/bbox/airbasins/06001')
+           .end(function(err,res){
+               if(err) return done(err)
+               res.status.should.eql(200)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.eql("(select geom_4326 as geom from public.carb_airbasins_aligned_03 where ab='06001' ) as area")
                return done()
            })
        })
@@ -178,7 +202,7 @@ describe('get_bbox',function(){
                res.status.should.eql(200)
                res.should.have.property('text')
                var c = res.text
-               c.should.eql("bounding_area as ( select (select geom4326 as geom from public.carb_counties_aligned_03  join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
+               c.should.eql("bounding_area as ( select (select geom4326 as geom from public.carb_counties_aligned_03 join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
                return done()
            })
        })
@@ -190,7 +214,7 @@ describe('get_bbox',function(){
                res.status.should.eql(200)
                res.should.have.property('text')
                var c = res.text
-               c.should.eql("banana as ( select (select geom4326 as geom from public.carb_counties_aligned_03  join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
+               c.should.eql("banana as ( select (select geom4326 as geom from public.carb_counties_aligned_03 join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
                return done()
            })
        })
