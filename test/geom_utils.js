@@ -36,7 +36,8 @@ describe('get_bbox',function(){
                     })
             app.get('/bbox/:areatype/:area'
                    ,function(req,res,next){
-                        var bbox = geom_utils.get_bbox(req,'areatype','area')
+                        var bbox = geom_utils.get_bbox(req,{'area_type_param':'areatype'
+                                                           ,'area_param':'area'})
                         return res.send(bbox)
                     })
             app.get('/setbbox'
@@ -48,7 +49,7 @@ describe('get_bbox',function(){
             app.get('/withformat_presetbbox'
                    ,function(req,res,next){
                         req.params['bbox']='mybbox as (select \'prix fixe bbox\' as geom)'
-                        var bbox = geom_utils.get_bbox_with_format(req,'mybbox')
+                        var bbox = geom_utils.get_bbox_with_format(req,{alias:'mybbox'})
                         return res.send(bbox)
                     })
             app.get('/withformatbbox/:zoom/:column/:row'
@@ -67,6 +68,15 @@ describe('get_bbox',function(){
                    ,function(req,res,next){
                         var bbox = geom_utils.get_bbox_with_format(req,{'area_type_param':'areatype'
                                                                        ,'area_param':'area'
+                                                                       ,'alias':'banana'
+                                                                       })
+                        return res.send(bbox)
+                    })
+            app.get('/withdumbformatbbox/:zoom/:column/:row'
+                   ,function(req,res,next){
+                        var duumb,dumber
+                        var bbox = geom_utils.get_bbox_with_format(req,{'area_type_param':duumb
+                                                                       ,'area_param':dumber
                                                                        ,'alias':'banana'
                                                                        })
                         return res.send(bbox)
@@ -202,11 +212,11 @@ describe('get_bbox',function(){
                res.status.should.eql(200)
                res.should.have.property('text')
                var c = res.text
-               c.should.eql("bounding_area as ( select (select geom4326 as geom from public.carb_counties_aligned_03 join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
+               c.should.eql("bounding_area as (select geom4326 as geom from public.carb_counties_aligned_03 join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' )")
                return done()
            })
        })
-    it('should generate a bbox from a county'
+    it('should generate a bbox from a county, banana with clause'
       ,function(done){
            superagent.get('http://'+testhost+':'+testport+'/withbananaformatbbox/counties/06001')
            .end(function(err,res){
@@ -214,11 +224,24 @@ describe('get_bbox',function(){
                res.status.should.eql(200)
                res.should.have.property('text')
                var c = res.text
-               c.should.eql("banana as ( select (select geom4326 as geom from public.carb_counties_aligned_03 join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' ) as area as geom )")
+               c.should.eql("banana as (select geom4326 as geom from public.carb_counties_aligned_03 join counties_fips a on (carb_counties_aligned_03.name ~* a.name) where fips=\'06001\' )")
                return done()
            })
        })
 
+    it('should generate a bbox from a county dumb options passing'
+      ,function(done){
+           superagent.get('http://'+testhost+':'+testport+['/withdumbformatbbox',zoom,column,row].join('/'))
+           .end(function(err,res){
+               if(err) return done(err)
+               res.status.should.eql(200)
+               res.should.have.property('text')
+               var c = res.text
+               c.should.match(/-118.1250 33.7243,-118.1250 34.0162,-117.7734 34.0162,-117.7734 33.7243,-118.1250 33.7243/)
+               c.should.match(/banana as/)
+               return done()
+           })
+       })
 })
 
 describe('bbox_from_xyz',function(){
