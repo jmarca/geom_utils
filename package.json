@@ -1,13 +1,14 @@
 {
   "name": "geom_utils",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Geometry utility functions for use with couchdb, postgis, etc",
   "main": "lib/geom_utils.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "lodash": ""
+    "lodash": "",
+    "couchdb_toQuery":"git://github.com/jmarca/couchdb_toQuery"
   },
   "devDependencies": {
     "should": "",
